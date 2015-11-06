@@ -1,7 +1,7 @@
-from node import node, path
+from node import node
 from graph import graph
 #from test import test
-import math
+
 from collections import OrderedDict
 
 graph1 = graph(0)
@@ -51,11 +51,15 @@ def bestPath(startNode, endNode):
 			keepGoing = False
 	print distance
 	print previous
-navigate = input("Start Navigation? (y/n) :")
-startNode = input("Where are you now?: ")
-endNode = input("Where would you like to go?: ")
-bestPath = bestPath(startNode, endNode)
-print bestPath
+navigate = raw_input("Start Navigation? (y/n) :")
+if navigate == "y":
+	startNode = input("Where are you now?: ")
+	endNode = input("Where would you like to go?: ")
+	bestPath = bestPath(startNode, endNode)
+	print bestPath
+
+	
+	
 
 
 
