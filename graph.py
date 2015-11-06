@@ -1,38 +1,56 @@
-
 from node import node
-
+from collections import OrderedDict
 class graph(object):
 	
 	def __init__ (self, number):
 		self.graphType = number
 		self.totalNodes = []
+		self.allNodeNames = {}
 	def createNodes(self):
-		arrX = [2, 2, 2, 2, 1, 2, 3, 4, 1, 2, 3, 4]
-		arrY = [1, 2, 5, 3, 5, 5, 5, 5, 7, 7, 7, 7]
+		#create points
+		arrX = [2, 4, 2, 4, 2, 3, 2, 3, 4]
+		arrY = [2, 2, 4, 4, 5, 5, 6, 6, 6]
+		
 		for i in range(0, len(arrX)):
-			tempNode = node(arrX[i], arrY[i])
+			tempNode = node(arrX[i], arrY[i], i)
 			
 			self.totalNodes.append(tempNode)
-		self.createConnections()
-	def createConnections(self):
+			self.allNodeNames[tempNode.nodeNumber] = tempNode
+
+		#create connection
 		connectionList = [
-		[1, 3],
-		[0, 2],
-		[1, 7],
-		[0, 5],
-		[5, 8],
-		[6, 9, 3, 4],
-		[5, 10, 7],
-		[11, 6, 2],
-		[4, 9],
-		[8, 5, 10],
-		[9, 6, 11],
-		[7, 10],
+		[1, 2],
+		[0, 3],
+		[0, 4],
+		[1, 8],
+		[2, 5, 6],
+		[4, 7],
+		[4, 7],
+		[6, 5, 8],
+		[7, 3],
 		]
 		for i in range(0, len(self.totalNodes)):
 			tempNode = self.totalNodes[i]
-			tempConnections = []
+			tempConnections = {}
 			for number in connectionList[i]:
-				tempConnections.append(self.totalNodes[number])
+				tempConnections[self.totalNodes[number].nodeNumber] = 0
 			tempNode.connectedNodes = tempConnections
-		return self.totalNodes
+		
+
+		#create distances
+		
+		for n in range(0, len(self.totalNodes)-1):
+			for connectedNode in self.allNodeNames[n].connectedNodes:
+				#import pdb; pdb.set_trace()
+				tempDistance = distanceBetween(self.allNodeNames[n], self.allNodeNames[connectedNode])
+				self.allNodeNames[n].connectedNodes[connectedNode] = tempDistance
+				
+
+def distanceBetween(node1, node2):
+	x1 = node1.x
+	y1 = node1.y
+	x2 = node2.x
+	y2 = node2.y
+
+	distance = (((x1 - x2)**2) + ((y1 - y2)**2))**0.5
+	return distance
