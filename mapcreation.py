@@ -39,12 +39,12 @@ class Corner(object):
 		self.corner_connections = []
 		self.connection_slopes = []
 
-map1 = Map.()
+map1 = Map()
 map_scan
-global connection_counter = 0
-global corner_counter = 0
-global segment_counter = 0
-global current_corner
+connection_counter = 0
+corner_counter = 0
+segment_counter = 0
+current_corner
 def map_scan(map1):
 	current_point = map1.invalids[0]
 	while(True):
@@ -75,9 +75,9 @@ def segment_scan(current_corner, iterator):
 	segment[segment_counter] = Segment[point_list, [corner[corner_counter - 1].point, point_list[point_list.length() - 1]]]
 	corner[corner_counter].segments = segment[segment_counter]
 	corner[corner_counter - 1].segments = segment[segment_counter]
-	global segment_counter += 1
+	segment_counter += 1
 	corner[corner_counter - 1].corner_connections = corner[corner_counter]
-	global segment_counter += 1
+	segment_counter += 1
 
 def point_scan(point):
 	test_point = point
@@ -88,7 +88,7 @@ def point_scan(point):
 			test_point[1] += y
 		if test_point in map1.invalids:
 			connections.append()
-			global connection_counter += 1
+			connection_counter += 1
 	return connections
 
 def slope_find(connections):
@@ -113,10 +113,10 @@ def connections_analyze(connections):
 		return False
 map_scan(map1)
 corners_list = []
-for i in xrange(0, global corner_counter)
+for i in xrange(0, corner_counter):
 	corners_list.append(corner[i])
 segments_list = []
-for t in xrange(0, global segment_counter):
+for t in xrange(0, segment_counter):
 	segments_list.append(segment[t])
 class Room_Leg(object):
 	def __init__(self):
@@ -200,20 +200,3 @@ for i in xrange(room_list.length() - 1):
 		room_join.append[room_list[i]]
 for x in xrange(0, room_join.length() - 1):
 	room_join[x].room_connections.append(segment)
-
-
-
-
-
-
-
-		
-
-
-
-
-
-
-
-
-
