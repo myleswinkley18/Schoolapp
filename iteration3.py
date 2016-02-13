@@ -1,15 +1,21 @@
+import sys
+import copy
+class Current_Point(object):
+	def __init__(self, point):
+		self.point = point
+	def __str__(self):
+		return "X: " + str(self.point[0]) + " Y: " + str(self.point[1])
+	def __copy__(self):
+		return Current_Point(self.point)
 
-def Segment(object):
-	def __init__(self, *corner_point):
-		self.includes = corner_point
+class Segment(object):
+	def __init__(self, corner_point, second_point, corner):
+		self.includes = [corner_point, second_point]
 		self.locations = []
-		self.corners = []
-	def includes_append(self, connections):
-		for i in xrange(len(connections) - 1):
-			self.includes.append(connections[i])
+		self.corners = [corner]
 	def corners_append(self):
 		self.corners.append(self.includes[0], self.includes[1])
-def Corner(object):
+class Corner(object):
 	def __init__(self, point, point_connections):
 		self.point = point
 		self.point_connections = point_connections
@@ -19,19 +25,14 @@ def Corner(object):
 	def slopes_append(self, slopes):
 		for i in xrange(len(slopes) - 1):
 			self.point_slopes.append(slopes[i])
-
 	def segment_connections_append(self, segment):
 		self.segment_connections.append(segment)
-
+	def point_connections_remove(self, point):
+		self.point_connections.remove(point)
 	def corner_connections_append(self, corner):
 		self.corner_connections.append(corner)
-
-		
-
-
-
-def Map(object):
-	def __init__(self, invalids, xdimen, ydimen):
+class Map(object):
+	def __init__ (self, invalids, xdimen, ydimen):
 		self.invalids = invalids
 		self.scanned_list = 0
 		self.xdimen = xdimen
@@ -41,74 +42,129 @@ def Map(object):
 		self.rooms = []
 		self.segments = []
 		self.corner_iterator = 0
-		self.current_segment
-		self.current_corner
+		self.current_segment = None
+		self.current_corner = None
+		self.current_point = None
+		self.current_slope = None
 	def master_creation(self):
-		self.current_corner = Corner(self.invalids[0], point_scan(self.invalids[0]))
+		self.current_point = copy.deepcopy(Current_Point(self.invalids[0]))
+		self.current_corner = copy.deepcopy(Corner(self.invalids[0], self.point_scan(self.current_point.point)))
+		self.open_space_add(self.current_corner)
 		self.corners.append(self.current_corner)
-		while(self.corners[-1] != self.current_corner):
-			for i in xrange(len(self.current_corner.point_connections) - len(self.current_corner.segment_connections)):
-				segment_draw(i)
-			self.corner_iterator += 1
-			self.current_corner = self.corners[self.corner_iterator]
-	
-
-
-	
-	def segment_draw(self, iterator_counter):
-		self.segments.append(self.current_corner.point, self.current_corner.point_connections[-iterator_counter])
-		self.current_segment = self.segments[-1]
 		done = False
-		draw_point = self.current_segment.points[-1]
-		slope = self.current_corner.point_slopes
+		while(not done):
+			for i in xrange(len(self.current_corner.point_connections)):
+				if self.current_corner.segment_connections[i] == None:
+					self.segment_draw(i)
+			self.corner_iterator += 1
+			try:
+				self.current_corner = copy.deepcopy(self.corners[self.corner_iterator])
+			except IndexError:
+				done = True
+
+
+	def open_space_add(self, corner):
+		corner.point_connections.remove(corner.point)
+		for i in xrange(len(corner.point_connections)):
+			corner.segment_connections.append(None)
+			corner.corner_connections.append(None)
+
+	def Open_Spot(self, list_a):
+		for i in xrange(len(list_a)):
+			if list_a[i] == None:
+				return i
+	def segment_draw(self, iterator_counter):
+		self.segments.append(Segment(self.current_corner.point, self.current_corner.point_connections[iterator_counter], self.current_corner))
+		self.current_segment = self.segments[-1]
+		print str(self.current_segment.includes)
+		done = False
+		draw_point = copy.deepcopy(self.current_segment.includes[-1])
+		slope = self.slope_find(self.current_corner.point, draw_point)
+		self.current_slope = copy.deepcopy(slope)
 		while(not done):
 			draw_point[0] += slope[0]
 			draw_point[1] += slope[1]
 			if draw_point in self.invalids:
-				if connections_analyze(point_scan(draw_point)):
-					self.current_segment.includes_append(draw_point)
+				self.current_point = copy.deepcopy(Current_Point(draw_point))
+				if self.connections_analyze(self.point_scan(self.current_point.point)):
+					self.current_segment.includes.append(self.current_point.point)
 				else:
+					self.current_segment.includes.append(self.current_point.point)
+					print "Current Segment's Points: " + str(self.current_segment.includes)
 					done = True
 					continue
 			else:
+				self.draw()
+				draw_point = copy.deepcopy(self.current_segment.includes[-1])
+		done = False
+		for i in xrange(len(self.corners)):
+			if self.corners[i].point == self.current_segment.includes[-1]:
+				reference_corner = self.corners[i]
 				done = True
-				continue
-		self.corners.append(Corner(self.current_segment.includes[-1], point_scan(self.current_segment.includes[-1])))
-		self.current_corner.corner_connections_append(self.corners[-1])
-		self.current_corner.segment_connections_append(self.current_segment)
-		self.corners[-1].segment_connections_append(self.current_segment)
-		self.corners[-1].corner_connections_append(self.current_corner)
-
-	def point_scan(self):
+		while(not done):
+			self.corners.append(Corner(self.current_segment.includes[-1], self.point_scan(self.current_segment.includes[-1])))
+			reference_corner = self.corners[-1]
+			self.open_space_add(self.corners[-1])
+			done = True
+		reference_corner.segment_connections[reference_corner.point_connections.index(self.current_segment.includes[-2])] = copy.deepcopy(self.current_segment)
+		reference_corner.corner_connections[reference_corner.point_connections.index(self.current_segment.includes[-2])] = copy.deepcopy(self.corners[-1])
+		self.current_corner.segment_connections[iterator_counter] = copy.deepcopy(self.current_segment)
+		self.current_corner.corner_connections[iterator_counter] = copy.deepcopy(self.corners[-1])
+	def point_scan(self, point):
 		connections = []
-		test_point = self.current_point
-		for x in xrange(-1, 1):
-			for y in xrange(-1 ,1):
+		test_point = list(point)
+		for x in xrange(-1, 2):
+			for y in xrange(-1, 2):
 				test_point[0] += x
 				test_point[1] += y
-			if test_point in self.invalids:
-				connections.append(test_point)
-				self.scanned_list += 1
-			test_point = self.current_point
+				if test_point in self.invalids:
+					connections.append(test_point)
+					self.scanned_list += 1
+				test_point = list(point)
+			test_point = list(point)
 		return connections
 
 	def connections_analyze(self, connections):
+		current_index = connections.index(self.current_point.point)
 		if len(connections) == 3:
-			if abs(connections[1][0] - connections[0][0]) == abs(connections[2][0] - connections[1][0]):
+			if abs(connections[current_index][0] - connections[0][0]) == abs(connections[current_index][0] - connections[2][0]):
 				return True
 			else:
 				return False
-		if len(connections) == 2:
-			self.current_segment.includes_append(connections)
-			draw()
-		else:
-			return False
+		if len(connections) > 3:
+			if abs(self.current_slope[0]) >= 1 and abs(self.current_slope[1]) >= 1:
+				test_point = copy.deepcopy(self.current_point.point)
+				mute_point = copy.deepcopy(test_point)
+				mute_point[0] += 1
+				if mute_point in self.invalids:
+					
+			else:
+				if abs(self.current_slope[0]) >= 1:
+					test_point = copy.deepcopy(self.current_point.point)
+					test_point[1] += 1
+					if test_point in self.invalids:
+						return False
+					test_point[1] -= 2
+					if test_point in self.invalids:
+						return False
+					return True
+				else:
+					test_point = copy.deepcopy(self.current_point.point)
+					test_point[0] += 1
+					if test_point in self.invalids:
+						return False
+					test_point[0] -= 2
+					if test_point in self.invalids:
+						return False
+					return True
+
+
 	def slope_find(self, origin_point, *points):
 		master_slope = []
 		for i in xrange(len(points)):
 			slope = []
-			slope[0] = points[i][0] - origin_point[0]
-			slope[1] = points[i][1] - origin_point[1]
+			slope.append(points[i][0] - origin_point[0])
+			slope.append(points[i][1] - origin_point[1])
 			master_slope.append(slope)
 		if len(points) == 1:
 			return slope
@@ -117,27 +173,50 @@ def Map(object):
 
 
 	def draw(self):
-		new_segment = []
-		first_point = self.current_segment.includes[-2]
-		second_point = self.current_segment.includes[-1]
-		slope = slope_find(first_point, second_point)
+		print 'Draw Ran'
+		segment = []
+		first_point = copy.deepcopy(self.current_segment.includes[-2])
+		second_point = copy.deepcopy(self.current_segment.includes[-1])
+		slope = self.slope_find(first_point, second_point)
 		done = False
+		print slope[0]
+		print slope[1]
+		segment.append(copy.deepcopy(second_point))
 		while(not done):
 			second_point[0] += slope[0]
 			second_point[1] += slope[1]
 			if second_point in self.invalids:
 				done = True
 				continue
-			new_segment.append(second_point)
-		self.current_segment.includes_append(new_segment)
-		self.current_segment.points.append(midpoint(new_segment[0], new_segment[-1]))
-
+			else:
+				segment.append(copy.deepcopy(second_point))
+				self.current_segment.includes.append(copy.deepcopy(second_point))
+		self.current_segment.locations.append(self.midpoint(segment[0], segment[-1]))
+		mute_point = copy.deepcopy(Current_Point(self.current_segment.includes[-1]))
+		mute_point.point[0] += slope[0]
+		mute_point.point[1] += slope[1]
+		self.current_segment.includes.append(mute_point.point)
+		print "Current Segment locations: " + str(self.current_segment.locations)
 	def midpoint(self, first_point, second_point):
 		midpoint = []
-		midpoint[0] = (first_point[0] + second_point[0]) / 2
-		midpoint[1] = (first_point[1] + second_point[1]) / 2
+		midpoint.append((first_point[0] + second_point[0]) / 2)
+		midpoint.append((first_point[1] + second_point[1]) / 2)
 		return midpoint
 
+
+invalids = [[0,0],[0,1],[0,2], [0,3], [0, 4], [0, 5],
+ [1, 0], [1,5], 
+ [2, 5], 
+ [3, 5], 
+ [4, 0], [4, 5], 
+ [5,0], [5, 1], [5, 2], [5, 3], [5, 4], [5, 5], 
+ [6, 3], [6, 5], 
+ [7, 3], [7, 5], 
+ [8, 3], [8, 5], 
+ [9, 3], [9, 5], 
+ [10, 3], [10, 4], [10, 5]]
+map1 = Map(invalids, 10, 5)
+map1.master_creation()
 
 
 
