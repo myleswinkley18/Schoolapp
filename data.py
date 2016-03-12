@@ -1,5 +1,6 @@
 import sys
 import copy
+import math
 class Current_Point(object):
 	def __init__(self, point):
 		self.point = point
@@ -22,6 +23,7 @@ class Corner(object):
 		self.point_slopes = []
 		self.segment_connections = []
 		self.corner_connections = []
+		self.markers = []
 	def slopes_append(self, slopes):
 		for i in xrange(len(slopes) - 1):
 			self.point_slopes.append(slopes[i])
@@ -49,6 +51,7 @@ class Map(object):
 	def master_creation(self):
 		self.current_point = copy.deepcopy(Current_Point(self.invalids[0]))
 		self.current_corner = copy.deepcopy(Corner(self.invalids[0], self.point_scan(self.current_point.point)))
+		self.current_corner.point_slopes = self.slope_find(self.current_corner.point_connections)
 		self.open_space_add(self.current_corner)
 		self.corners.append(self.current_corner)
 		done = False
@@ -131,14 +134,7 @@ class Map(object):
 				return True
 			else:
 				return False
-		if len(connections) > 3:
-			if abs(self.current_slope[0]) >= 1 and abs(self.current_slope[1]) >= 1:
-				test_point = copy.deepcopy(self.current_point.point)
-				mute_point = copy.deepcopy(test_point)
-				mute_point[0] += 1
-				if mute_point in self.invalids:
-					
-			else:
+		else:
 				if abs(self.current_slope[0]) >= 1:
 					test_point = copy.deepcopy(self.current_point.point)
 					test_point[1] += 1
@@ -202,22 +198,4 @@ class Map(object):
 		midpoint.append((first_point[0] + second_point[0]) / 2)
 		midpoint.append((first_point[1] + second_point[1]) / 2)
 		return midpoint
-
-
-invalids = [[0,0],[0,1],[0,2], [0,3], [0, 4], [0, 5],
- [1, 0], [1,5], 
- [2, 5], 
- [3, 5], 
- [4, 0], [4, 5], 
- [5,0], [5, 1], [5, 2], [5, 3], [5, 4], [5, 5], 
- [6, 3], [6, 5], 
- [7, 3], [7, 5], 
- [8, 3], [8, 5], 
- [9, 3], [9, 5], 
- [10, 3], [10, 4], [10, 5]]
-map1 = Map(invalids, 10, 5)
-map1.master_creation()
-
-
-
 
