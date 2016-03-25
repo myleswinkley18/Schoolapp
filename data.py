@@ -4,8 +4,6 @@ import math
 class Current_Point(object):
 	def __init__(self, point):
 		self.point = point
-	def __str__(self):
-		return "X: " + str(self.point[0]) + " Y: " + str(self.point[1])
 	def __copy__(self):
 		return Current_Point(self.point)
 
@@ -36,7 +34,7 @@ class Corner(object):
 class Map(object):
 	def __init__ (self, invalids, xdimen, ydimen):
 		self.invalids = invalids
-		self.scanned_list = 0
+		self.scanned_list = []
 		self.xdimen = xdimen
 		self.ydimen = ydimen
 		self.corners = []
@@ -48,6 +46,13 @@ class Map(object):
 		self.current_corner = None
 		self.current_point = None
 		self.current_slope = None
+
+	def data_sort(self, current_data, data_list):
+		if current_data == data_list[0]:
+			return data_list[0]
+		else:
+			return data_list[1]
+
 	def master_creation(self):
 		self.current_point = copy.deepcopy(Current_Point(self.invalids[0]))
 		self.current_corner = copy.deepcopy(Corner(self.invalids[0], self.point_scan(self.current_point.point)))
@@ -66,7 +71,7 @@ class Map(object):
 				done = True
 
 
-	def open_space_add(self, corner):
+	def open_space_add(self, corner): 
 		corner.point_connections.remove(corner.point)
 		for i in xrange(len(corner.point_connections)):
 			corner.segment_connections.append(None)
@@ -79,7 +84,6 @@ class Map(object):
 	def segment_draw(self, iterator_counter):
 		self.segments.append(Segment(self.current_corner.point, self.current_corner.point_connections[iterator_counter], self.current_corner))
 		self.current_segment = self.segments[-1]
-		print str(self.current_segment.includes)
 		done = False
 		draw_point = copy.deepcopy(self.current_segment.includes[-1])
 		slope = self.slope_find(self.current_corner.point, draw_point)
@@ -91,9 +95,9 @@ class Map(object):
 				self.current_point = copy.deepcopy(Current_Point(draw_point))
 				if self.connections_analyze(self.point_scan(self.current_point.point)):
 					self.current_segment.includes.append(self.current_point.point)
+
 				else:
 					self.current_segment.includes.append(self.current_point.point)
-					print "Current Segment's Points: " + str(self.current_segment.includes)
 					done = True
 					continue
 			else:
@@ -104,8 +108,9 @@ class Map(object):
 			if self.corners[i].point == self.current_segment.includes[-1]:
 				reference_corner = self.corners[i]
 				done = True
-		while(not done):
+		if not done:
 			self.corners.append(Corner(self.current_segment.includes[-1], self.point_scan(self.current_segment.includes[-1])))
+			self.current_segment.corners.append(self.corners[-1])
 			reference_corner = self.corners[-1]
 			self.open_space_add(self.corners[-1])
 			done = True
@@ -122,7 +127,7 @@ class Map(object):
 				test_point[1] += y
 				if test_point in self.invalids:
 					connections.append(test_point)
-					self.scanned_list += 1
+					self.scanned_list.append(test_point)
 				test_point = list(point)
 			test_point = list(point)
 		return connections
@@ -169,14 +174,11 @@ class Map(object):
 
 
 	def draw(self):
-		print 'Draw Ran'
 		segment = []
 		first_point = copy.deepcopy(self.current_segment.includes[-2])
 		second_point = copy.deepcopy(self.current_segment.includes[-1])
 		slope = self.slope_find(first_point, second_point)
 		done = False
-		print slope[0]
-		print slope[1]
 		segment.append(copy.deepcopy(second_point))
 		while(not done):
 			second_point[0] += slope[0]
@@ -192,7 +194,6 @@ class Map(object):
 		mute_point.point[0] += slope[0]
 		mute_point.point[1] += slope[1]
 		self.current_segment.includes.append(mute_point.point)
-		print "Current Segment locations: " + str(self.current_segment.locations)
 	def midpoint(self, first_point, second_point):
 		midpoint = []
 		midpoint.append((first_point[0] + second_point[0]) / 2)
